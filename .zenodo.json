@@ -1,0 +1,53 @@
+{
+  "title": "Geometric Constraints and Vulnerability in Single-Cell ATAC-seq Immune States: Analysis Pipeline and Data",
+  "description": "Reproducible computational pipeline for analyzing immune system geometry and critical transitions using single-cell ATAC-seq data. Includes Information Bottleneck implementation, Topological Data Analysis, and vulnerability simulations for robustness assessment. This package contains processed data tables, analysis scripts, and audit logs for full reproducibility.",
+  "creators": [
+    {
+      "name": "Navarro, Elkin",
+      "affiliation": "Centro de Investigaciones en Ciencias de la Vida, Universidad Simón Bolívar",
+      "orcid": "0000-0000-0000-0000"
+    }
+  ],
+  "contributors": [],
+  "keywords": [
+    "single-cell ATAC-seq",
+    "systems immunology",
+    "information geometry",
+    "topological data analysis",
+    "immune vulnerability",
+    "computational biology",
+    "reproducible research"
+  ],
+  "license": "CC-BY-4.0",
+  "subjects": [
+    {
+      "term": "Immunology",
+      "identifier": "https://www.wikidata.org/wiki/Q5274387"
+    },
+    {
+      "term": "Computational Biology",
+      "identifier": "https://www.wikidata.org/wiki/Q1936304"
+    },
+    {
+      "term": "Data Analysis",
+      "identifier": "https://www.wikidata.org/wiki/Q13018216"
+    }
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "GSE194122",
+      "relation": "references",
+      "resource_type": "dataset",
+      "scheme": "other"
+    },
+    {
+      "identifier": "github.com/elkinnavarro-glitch/immune-state-geometry-scATAC",
+      "relation": "isSourceOf",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ],
+  "publication_date": "2024-01-02",
+  "upload_type": "software",
+  "access_right": "open"
+}
