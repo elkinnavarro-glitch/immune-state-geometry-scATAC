@@ -1,0 +1,51 @@
+name: Generate Data & Code Availability Section
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.tsv'
+      - '**.pdf'
+      - 'Data_Code_Availability_PRXLife.md'
+      - 'scripts/generate_data_code_section.py'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.ref }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Generate Data & Code Availability section
+        run: |
+          python scripts/generate_data_code_section.py
+      
+      - name: Check if changes were made
+        id: verify-changes
+        run: |
+          if git diff --quiet Data_Code_Availability_PRXLife_auto.md; then
+            echo "No changes detected"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Commit and push changes
+        if: steps.verify-changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Data_Code_Availability_PRXLife_auto.md
+          git commit -m "chore: Auto-generate Data & Code Availability section [skip ci]"
+          git push
