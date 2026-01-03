@@ -1,0 +1,83 @@
+.github/workflows/zenodo_upload.ymlname: Upload to Zenodo on Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      sandbox:
+        description: 'Upload to Zenodo Sandbox (true) or Production (false)'
+        required: false
+        default: 'false'
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full history for version info
+      
+      - name: Set Zenodo endpoint
+        id: zenodo
+        run: |
+          if [[ "${{ github.event.inputs.sandbox }}" == "true" ]]; then
+            echo "endpoint=https://sandbox.zenodo.org" >> $GITHUB_OUTPUT
+          else
+            echo "endpoint=https://zenodo.org" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create release tarball
+        run: |
+          mkdir -p upload
+          # Copy code and data
+          cp -r scripts src metadata *.json *.md LICENSE upload/ || true
+          # Create tarball
+          tar -czf immune-state-geometry-scATAC-${{ github.ref_name }}.tar.gz -C upload .
+          # List contents
+          ls -lh *.tar.gz
+      
+      - name: Upload to Zenodo
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_ENDPOINT: ${{ steps.zenodo.outputs.endpoint }}
+        run: |
+          # Get release info
+          RELEASE_TAG=${{ github.ref_name }}
+          RELEASE_BODY="${{ github.event.release.body }}"
+          
+          # Create deposition
+          RESPONSE=$(curl -X POST \
+            "$ZENODO_ENDPOINT/api/deposit/depositions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ZENODO_TOKEN" \
+            -d '{"metadata": {"title": "Immune State Geometry scATAC - Release '"$RELEASE_TAG"'", "description": "'"${RELEASE_BODY:0:200}"'", "upload_type": "software"}}')
+          
+          DEPOSITION_ID=$(echo $RESPONSE | jq -r '.id')
+          echo "Created deposition: $DEPOSITION_ID"
+          echo "deposition_id=$DEPOSITION_ID" >> $GITHUB_ENV
+          
+          # Upload tarball
+          curl -X POST \
+            "$ZENODO_ENDPOINT/api/deposit/depositions/$DEPOSITION_ID/files" \
+            -H "Authorization: Bearer $ZENODO_TOKEN" \
+            -F "file=@immune-state-geometry-scATAC-$RELEASE_TAG.tar.gz"
+          
+          # Publish
+          curl -X POST \
+            "$ZENODO_ENDPOINT/api/deposit/depositions/$DEPOSITION_ID/actions/publish" \
+            -H "Authorization: Bearer $ZENODO_TOKEN"
+      
+      - name: Create comment with Zenodo DOI
+        if: github.event_name == 'release'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ **Zenodo Upload Complete**\n\nThis release has been uploaded to Zenodo. You can find it at:\n- **Production**: https://zenodo.org (search for latest version)\n- **Sandbox**: https://sandbox.zenodo.org (testing)\n\nUpdate the Data & Code Availability section with the Zenodo DOI once available.'
+            })
